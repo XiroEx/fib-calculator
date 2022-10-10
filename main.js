@@ -7,17 +7,18 @@ async function fibs(asset, time) {
     const candles = (await Publisher.zRange(`${asset}-${time}ftx`, 0, -1)).map(c=>(JSON.parse(c)))
     const high = candles.reduce((a,o) => (a ? Math.max(a.value,o[2]) == a.value ? a : {value: o[2], time: o[0]} : {value: o[2], time: o[0]}), 0)
     const low = candles.reduce((a,o) => (a ? Math.min(a.value,o[3]) == a.value ? a : {value: o[3], time: o[0]} : {value: o[3], time: o[0]}), 0)
-    console.log(high.time > low.time ? 'Retracement (Uptrend, Buy Targets)' : 'Extension (Downtrend, Sell Targets)')
+    let message = {m:`${high.time > low.time ? 'Retracement (Uptrend, Buy Targets)' : 'Extension (Downtrend, Sell Targets)'}`}
     const levels = { 0: low.value, 1: high.value}
     if (levels[0]) {
         const fib = Fib.getFibRetracement({ levels })
-        console.log(fib)
+        message.f= fib
     } else {
-        console.log('Data Error')
+        message.f = 'Data Error'
     }
-    console.log(`Price : ${await Publisher.get('SOL-PERP-ftx')}`)
+    message.p = await Publisher.get('SOL-PERP-ftx')
     Publisher.disconnect()
+    return (message)
 }
-fibs('SOL-PERP', '15m') //!TEMP
+//console.log(await fibs('SOL-PERP', '1h')) //!TEMP
 
 export default fibs
